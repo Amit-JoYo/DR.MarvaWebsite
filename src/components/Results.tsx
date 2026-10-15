@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type FocusEvent, type PointerEvent } from "react";
 import { Pause, Play } from "lucide-react";
 import { useLanguage } from "@/lib/language-context";
 import type { ResultCard } from "@/lib/types";
@@ -11,14 +11,37 @@ import { Modal } from "./Modal";
 const CARD_GAP_PX = 24; // matches the me-6 spacing on each card
 const SPEED_PX_PER_SECOND = 35;
 const EDGE_TOLERANCE_PX = 4;
+const DRAG_THRESHOLD_PX = 6;
+
+/** Native scrolling takes over when the visitor asked for less motion (OS setting or the accessibility menu). */
+function motionDisabled() {
+  return (
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+    document.documentElement.classList.contains("a11y-nomotion")
+  );
+}
 
 export function Results() {
   const { t } = useLanguage();
   const items = t.results.items;
   const viewportRef = useRef<HTMLDivElement>(null);
-  const [loop, setLoop] = useState({ active: false, duration: 0 });
+  const trackRef = useRef<HTMLUListElement>(null);
+  const [loop, setLoop] = useState({ active: false, setWidth: 0 });
   const [userPaused, setUserPaused] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const [selected, setSelected] = useState<ResultCard | null>(null);
+
+  // The loop is driven from JS (not a CSS animation) so a drag can move the same position the autoplay uses.
+  const positionRef = useRef(0);
+  const pausedRef = useRef(false);
+  const hoveredRef = useRef(false);
+  const focusedRef = useRef(false);
+  const dragRef = useRef<{ pointerId: number; startX: number; startPosition: number; moved: boolean } | null>(null);
+  const suppressClickRef = useRef(false);
+
+  useEffect(() => {
+    pausedRef.current = userPaused;
+  }, [userPaused]);
 
   // Loop only when the cards don't all fit; otherwise show them as a static row.
   useEffect(() => {
@@ -30,12 +53,93 @@ export function Results() {
       const setWidth = items.length * (card.getBoundingClientRect().width + CARD_GAP_PX);
       setLoop({
         active: setWidth - CARD_GAP_PX > viewport.clientWidth + EDGE_TOLERANCE_PX,
-        duration: setWidth / SPEED_PX_PER_SECOND,
+        setWidth,
       });
     });
     observer.observe(viewport);
     return () => observer.disconnect();
   }, [items.length]);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    if (!loop.active) {
+      track.style.transform = "";
+      return;
+    }
+
+    // Distance travelled grows in the reading direction: leftwards in LTR, rightwards in RTL.
+    const direction = getComputedStyle(track).direction === "rtl" ? 1 : -1;
+    let last = performance.now();
+    let frame = 0;
+
+    const tick = (now: number) => {
+      const elapsed = Math.min(now - last, 100) / 1000;
+      last = now;
+
+      if (motionDisabled()) {
+        positionRef.current = 0;
+        track.style.transform = "";
+      } else {
+        const autoplay = !pausedRef.current && !hoveredRef.current && !focusedRef.current && !dragRef.current;
+        if (autoplay) positionRef.current += SPEED_PX_PER_SECOND * elapsed;
+        positionRef.current = ((positionRef.current % loop.setWidth) + loop.setWidth) % loop.setWidth;
+        track.style.transform = `translate3d(${direction * positionRef.current}px, 0, 0)`;
+      }
+      frame = requestAnimationFrame(tick);
+    };
+
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [loop.active, loop.setWidth]);
+
+  function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
+    if (!loop.active || motionDisabled()) return;
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    dragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startPosition: positionRef.current,
+      moved: false,
+    };
+  }
+
+  function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
+    const drag = dragRef.current;
+    const track = trackRef.current;
+    if (!drag || !track || drag.pointerId !== event.pointerId) return;
+    const delta = event.clientX - drag.startX;
+    if (!drag.moved) {
+      if (Math.abs(delta) < DRAG_THRESHOLD_PX) return;
+      drag.moved = true;
+      // Capture only once it is a real drag, so a plain tap still reaches the card's button.
+      event.currentTarget.setPointerCapture(event.pointerId);
+      setDragging(true);
+    }
+    const direction = getComputedStyle(track).direction === "rtl" ? 1 : -1;
+    positionRef.current = drag.startPosition + direction * delta;
+  }
+
+  function endDrag(event: PointerEvent<HTMLDivElement>) {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    dragRef.current = null;
+    if (drag.moved) {
+      suppressClickRef.current = true;
+      window.setTimeout(() => {
+        suppressClickRef.current = false;
+      }, 0);
+      setDragging(false);
+    }
+  }
+
+  function handleFocus() {
+    focusedRef.current = true;
+  }
+
+  function handleBlur(event: FocusEvent<HTMLDivElement>) {
+    if (!event.currentTarget.contains(event.relatedTarget)) focusedRef.current = false;
+  }
 
   // Second copy makes the loop seamless; it is hidden from assistive tech and focus.
   const cards = loop.active ? [...items, ...items] : items;
@@ -72,24 +176,37 @@ export function Results() {
         <div
           ref={viewportRef}
           data-marquee
-          className={`group mt-4 overflow-hidden [container-type:inline-size] motion-reduce:overflow-x-auto ${
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onPointerEnter={(event) => {
+            if (event.pointerType === "mouse") hoveredRef.current = true;
+          }}
+          onPointerLeave={(event) => {
+            if (event.pointerType === "mouse") hoveredRef.current = false;
+          }}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          onDragStart={(event) => event.preventDefault()}
+          onClickCapture={(event) => {
+            // A drag that ends over a card must not also open it.
+            if (suppressClickRef.current) {
+              event.preventDefault();
+              event.stopPropagation();
+            }
+          }}
+          className={`mt-4 overflow-hidden [container-type:inline-size] motion-reduce:touch-auto motion-reduce:overflow-x-auto ${
             loop.active
-              ? "[mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)]"
+              ? `touch-pan-y select-none [mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)] ${
+                  dragging ? "[&_*]:!cursor-grabbing" : "cursor-grab"
+                }`
               : ""
           }`}
         >
           <ul
-            style={
-              {
-                "--marquee-duration": `${loop.duration}s`,
-                animationPlayState: userPaused ? "paused" : undefined,
-              } as CSSProperties
-            }
-            className={`flex w-max py-2 ${
-              loop.active
-                ? "animate-marquee [--marquee-shift:-50%] group-focus-within:[animation-play-state:paused] group-hover:[animation-play-state:paused] motion-reduce:animate-none rtl:[--marquee-shift:50%]"
-                : ""
-            }`}
+                      ref={trackRef}
+                      className={`flex w-max py-2 ${loop.active ? "will-change-transform" : ""}`}
           >
             {cards.map((item, index) => {
               const isCopy = index >= items.length;

@@ -32,15 +32,6 @@
   --font-sans: var(--dm-body, var(--font-assistant));
   --font-serif: var(--dm-heading, var(--font-source-serif), var(--font-frank-ruhl), Georgia, serif);
   --font-script: var(--font-great-vibes), cursive;
-
-  /* Endless horizontal loop: the track holds two identical sets, so shifting by half is seamless. */
-  --animate-marquee: marquee var(--marquee-duration, 60s) linear infinite;
-
-  @keyframes marquee {
-    to {
-      transform: translateX(var(--marquee-shift));
-    }
-  }
 }
 
 html {
@@ -159,6 +150,8 @@ html.a11y-nomotion *::after {
 /* Without the loop, show the results gallery as a scrollable row of the original cards. */
 html.a11y-nomotion [data-marquee] {
   overflow-x: auto;
+  touch-action: auto;
+  cursor: auto;
 }
 
 html.a11y-nomotion [data-copy] {

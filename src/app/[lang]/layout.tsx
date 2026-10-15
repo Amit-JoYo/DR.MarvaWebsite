@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Assistant, Frank_Ruhl_Libre, Great_Vibes, Source_Serif_4 } from "next/font/google";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
@@ -100,7 +101,7 @@ export default async function RootLayout({ children, params }: RouteParams & { c
       className={`${assistant.variable} ${sourceSerif.variable} ${frankRuhl.variable} ${greatVibes.variable} h-full antialiased`}
     >
       <body id="top" className="flex min-h-full flex-col text-navy">
-        <script dangerouslySetInnerHTML={{ __html: A11Y_BOOT_SCRIPT }} />
+        <Script id="a11y-boot" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: A11Y_BOOT_SCRIPT }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
