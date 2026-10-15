@@ -2,11 +2,15 @@ import type { Metadata } from "next";
 import { Assistant, Frank_Ruhl_Libre, Great_Vibes, Source_Serif_4 } from "next/font/google";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import { AccessibilityMenu } from "@/components/AccessibilityMenu";
+import { DesignPanel } from "@/components/DesignPanel";
+import { DESIGN_PANEL_ENABLED } from "@/lib/design-settings";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { StickyContact } from "@/components/StickyContact";
 import { LanguageProvider } from "@/lib/language-context";
 import { LANGS, NOINDEX, SITE_URL, isLang, pageUrl } from "@/lib/site";
+import { A11Y_BOOT_SCRIPT } from "@/lib/a11y-settings";
 import { translations } from "@/lib/translations";
 import { CLINIC_PHONE_TEL } from "@/lib/whatsapp";
 import "../globals.css";
@@ -92,9 +96,11 @@ export default async function RootLayout({ children, params }: RouteParams & { c
       lang={lang}
       dir={t.dir}
       data-scroll-behavior="smooth"
+      suppressHydrationWarning
       className={`${assistant.variable} ${sourceSerif.variable} ${frankRuhl.variable} ${greatVibes.variable} h-full antialiased`}
     >
       <body id="top" className="flex min-h-full flex-col text-navy">
+        <script dangerouslySetInnerHTML={{ __html: A11Y_BOOT_SCRIPT }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
@@ -110,6 +116,8 @@ export default async function RootLayout({ children, params }: RouteParams & { c
           {children}
           <Footer />
           <StickyContact />
+          <AccessibilityMenu />
+          {DESIGN_PANEL_ENABLED && <DesignPanel />}
         </LanguageProvider>
       </body>
     </html>

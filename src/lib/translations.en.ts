@@ -23,6 +23,20 @@ export const en: Translations = {
   a11y: {
     skipToContent: "Skip to main content",
     mainNavLabel: "Main navigation",
+    toolbar: {
+      open: "Accessibility menu",
+      title: "Accessibility tools",
+      close: "Close accessibility menu",
+      textSize: "Text size",
+      textSizeLevels: ["Default", "Large", "Larger", "Largest"],
+      contrast: "High contrast",
+      grayscale: "Grayscale",
+      links: "Highlight links",
+      readableFont: "Readable font",
+      pauseMotion: "Stop animations",
+      reset: "Reset settings",
+      statement: "Accessibility statement",
+    },
   },
   stickyBar: {
     label: "Quick contact",
@@ -340,6 +354,7 @@ export const en: Translations = {
         title: "Accessibility features",
         body: [
           "Keyboard navigation, including a link to skip to the main content.",
+          "An accessibility menu to enlarge text, enable high contrast or grayscale, highlight links, switch to a readable font and stop animations.",
           "Semantic heading structure and screen reader support.",
           "Suitable color contrast and clear focus indicators.",
           "Support for Hebrew (right-to-left) and English (left-to-right).",

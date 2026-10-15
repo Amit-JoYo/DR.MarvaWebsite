@@ -14,8 +14,12 @@ export function Hero() {
   const [portraitOpen, setPortraitOpen] = useState(false);
 
   return (
-    <section id="about" className="scroll-mt-24">
-      <div className="mx-auto grid max-w-6xl gap-12 px-6 py-16 md:grid-cols-12 md:items-center md:gap-16 md:py-24">
+    <section id="about" className="relative scroll-mt-24 overflow-hidden bg-gradient-to-b from-sage-wash/70 to-sage-soft/30">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 end-[-6rem] h-80 w-80 rounded-full bg-sage/20 blur-3xl"
+      />
+      <div className="relative mx-auto grid max-w-6xl gap-12 px-6 py-16 md:grid-cols-12 md:items-center md:gap-16 md:py-24">
         <div className="text-start md:col-span-7">
           <span className="inline-flex rounded-full border border-hairline bg-mist px-4 py-1.5 text-xs font-medium tracking-wide text-sage-ink">
             {t.hero.eyebrow}

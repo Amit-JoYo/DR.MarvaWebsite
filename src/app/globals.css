@@ -5,21 +5,32 @@
   --foreground: #152238;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+/* Plain @theme (not inline) so utilities read var(--color-*), letting the high-contrast mode and the design panel override them. */
+@theme static {
   --color-porcelain: #fbf9f6;
   --color-surface: #ffffff;
-  --color-hairline: #dde3db;
+  --color-hairline: #cfd9cb;
   --color-navy: #152238;
-  --color-muted: #64748b;
+  /* Darkened from slate-500 so small text still reaches 4.5:1 on the sage section tints. */
+  --color-muted: #4f5d70;
   --color-sage: #8a9a86;
   --color-sage-dark: #738670;
   /* Darker sage for small text and hover fills: #738670 is only ~3.5:1 on the mist tint. */
   --color-sage-ink: #5a6b56;
   --color-mist: #f1f4f0;
-  --font-sans: var(--font-assistant);
-  --font-serif: var(--font-source-serif), var(--font-frank-ruhl), Georgia, serif;
+  /* Section bands, from light to deep, so the page reads as layered sage rather than white. */
+  --color-sage-soft: #e6ece3;
+  --color-sage-wash: #d9e2d5;
+  --color-page-top: #e9efe6;
+  --color-page: #f7f9f5;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  /* --dm-* are set live by the design panel; unset, they fall back to the site fonts. */
+  --font-sans: var(--dm-body, var(--font-assistant));
+  --font-serif: var(--dm-heading, var(--font-source-serif), var(--font-frank-ruhl), Georgia, serif);
   --font-script: var(--font-great-vibes), cursive;
 
   /* Endless horizontal loop: the track holds two identical sets, so shifting by half is seamless. */
@@ -34,6 +45,7 @@
 
 html {
   scroll-padding-top: 5rem;
+  font-size: calc(100% * var(--dm-base, 1));
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -48,12 +60,20 @@ html {
 }
 
 body {
-  background-color: #ffffff;
-  background-image: radial-gradient(ellipse 120% 80% at 50% 0%, #fbf9f6 0%, #ffffff 100%);
+  background-color: var(--color-page);
+  background-image: radial-gradient(ellipse 120% 80% at 50% 0%, var(--color-page-top) 0%, var(--color-page) 100%);
   background-repeat: no-repeat;
   background-attachment: fixed;
   color: var(--foreground);
-  font-family: var(--font-assistant), Arial, Helvetica, sans-serif;
+  font-family: var(--dm-body, var(--font-assistant)), Arial, Helvetica, sans-serif;
+}
+
+/* Design-panel heading size; scoped to page content so the panel itself is not rescaled. */
+main h1,
+main h2,
+main h3,
+footer h3 {
+  zoom: var(--dm-heading-scale, 1);
 }
 
 @utility glass-card {
@@ -68,4 +88,80 @@ body {
   }
 }
 
+/* ---- Accessibility toolbar modes (classes are toggled on <html> by AccessibilityMenu) ---- */
+
+html.a11y-text-1 {
+  font-size: calc(112.5% * var(--dm-base, 1));
+}
+
+html.a11y-text-2 {
+  font-size: calc(125% * var(--dm-base, 1));
+}
+
+html.a11y-text-3 {
+  font-size: calc(150% * var(--dm-base, 1));
+}
+
+/* !important so high contrast also wins over colors set inline by the design panel. */
+html.a11y-contrast {
+  --color-navy: #000000 !important;
+  --color-muted: #111111 !important;
+  --color-sage: #3f5a3a !important;
+  --color-sage-dark: #2f4a2b !important;
+  --color-sage-ink: #1f3a1b !important;
+  --color-hairline: #2f3d2c !important;
+  --color-porcelain: #ffffff !important;
+  --color-mist: #ffffff !important;
+  --color-sage-soft: #ffffff !important;
+  --color-sage-wash: #ffffff !important;
+  --color-page: #ffffff !important;
+  --color-page-top: #ffffff !important;
+  --foreground: #000000;
+}
+
+html.a11y-contrast body {
+  background: #ffffff;
+}
+
+html.a11y-contrast .glass-card {
+  background-color: #ffffff;
+}
+
+html.a11y-grayscale {
+  filter: grayscale(1);
+}
+
+html.a11y-links a {
+  text-decoration: underline !important;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 2px;
+}
+
+html.a11y-readable body,
+html.a11y-readable body * {
+  font-family: Arial, Helvetica, sans-serif !important;
+  letter-spacing: 0.02em;
+}
+
+html.a11y-readable p,
+html.a11y-readable li {
+  line-height: 1.8 !important;
+}
+
+html.a11y-nomotion *,
+html.a11y-nomotion *::before,
+html.a11y-nomotion *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+/* Without the loop, show the results gallery as a scrollable row of the original cards. */
+html.a11y-nomotion [data-marquee] {
+  overflow-x: auto;
+}
+
+html.a11y-nomotion [data-copy] {
+  display: none;
+}
 

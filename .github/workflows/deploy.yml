@@ -23,6 +23,8 @@ jobs:
       NEXT_PUBLIC_SITE_URL: https://amit-joyo.github.io/DR.MarvaWebsite
       # Keep the preview out of search engines.
       NEXT_PUBLIC_NOINDEX: "true"
+      # Design-phase only: shows the live design panel on the preview. Remove when the look is locked in.
+      NEXT_PUBLIC_DESIGN_PANEL: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

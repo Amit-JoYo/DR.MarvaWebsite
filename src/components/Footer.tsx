@@ -14,7 +14,7 @@ export function Footer() {
   const brand = lang === "he" ? "ד״ר מרווה" : "Dr. Marva";
 
   return (
-    <footer className="border-t border-hairline bg-mist/50">
+    <footer className="border-t border-hairline bg-sage-wash/80">
       {/* Extra bottom padding on small screens keeps the sticky contact bar from covering the footer. */}
       <div className="mx-auto max-w-6xl px-6 pb-28 pt-12 md:pb-12">
         <div className="grid gap-10 text-start sm:grid-cols-2 lg:grid-cols-4">

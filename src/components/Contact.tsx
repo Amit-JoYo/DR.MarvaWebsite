@@ -11,7 +11,7 @@ export function Contact() {
   const footer = t.footer;
 
   return (
-    <section id="contact" className="scroll-mt-24 border-t border-hairline">
+    <section id="contact" className="scroll-mt-24 border-t border-hairline bg-sage-soft/70">
       <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
         <div className="max-w-2xl text-start">
           <h2 className="font-serif text-3xl font-semibold tracking-tight text-navy sm:text-4xl">

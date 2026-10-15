@@ -70,6 +70,20 @@ export interface Translations {
   a11y: {
     skipToContent: string;
     mainNavLabel: string;
+    toolbar: {
+      open: string;
+      title: string;
+      close: string;
+      textSize: string;
+      textSizeLevels: [string, string, string, string];
+      contrast: string;
+      grayscale: string;
+      links: string;
+      readableFont: string;
+      pauseMotion: string;
+      reset: string;
+      statement: string;
+    };
   };
   stickyBar: {
     label: string;

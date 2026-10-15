@@ -71,6 +71,7 @@ export function Results() {
 
         <div
           ref={viewportRef}
+          data-marquee
           className={`group mt-4 overflow-hidden [container-type:inline-size] motion-reduce:overflow-x-auto ${
             loop.active
               ? "[mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)]"
